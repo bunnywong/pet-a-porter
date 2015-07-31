@@ -1,0 +1,183 @@
+{% comment %}
+    to install, insert:
+    {% include 'subscription-cart-footer' %} 
+    at the bottom of cart.liquid page 
+{% endcomment %}
+
+<script>
+    rechargedebug={}
+	rechargedebug['subscription_active_metafield'] = '{{shop.metafields.subscriptions.subscription_active}}'
+	rechargedebug['subscription_on']=false
+	
+	subscription_on=false
+    {% if shop.metafields.subscriptions.subscription_active == 'true'  %}
+        subscription_on=true
+        rechargedebug['subscription_on']=subscription_on
+    {% endif %}
+</script>
+
+<script>
+    function get_cookie(name){
+        return(document.cookie.match('(^|; )'+name+'=([^;]*)')||0)[2]
+    }
+    
+    if ( subscription_on==true || get_cookie('recharge')!=undefined ) {
+        subscription_on=true 
+    } 
+
+    rechargedebug['previewactive']='not active'
+    if (get_cookie('recharge')=='true') { 
+        rechargedebug['previewactive']='true' 
+    } 
+</script>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+<script>
+rjQuery = jQuery.noConflict( true );
+
+if (subscription_on==true) {
+          
+    function saveCartNoteThenRedirect() {
+      try {
+          data={}
+          rjQuery("[name*='attributes']").each(function() {
+              var input = rjQuery(this)
+              var input_type = rjQuery(this).attr('type')
+               
+              if( input.val() != '' && ( (input_type != 'radio' && input_type != 'checkbox') || ( input_type == 'radio' && input.is(':checked') ) || ( input_type == 'checkbox' && input.prop('checked')) ) ){
+                  var name_attr = input.attr('name')
+                  data[name_attr]= input.val()
+                  has_cart_note_or_attribute= true   
+               }
+          });
+          
+          if( rjQuery('[name="note"]').val() != undefined ){
+              data['note'] = rjQuery('[name="note"]').val();
+              has_cart_note_or_attribute= true
+          }
+          
+          if( rjQuery('#terms, #agree').val() != undefined ){
+              data['terms_and_conditions'] = rjQuery('#terms, #agree').val();
+              has_cart_note_or_attribute= true
+          }
+          
+          if (has_cart_note_or_attribute) {
+              rjQuery.ajax({
+                  type: 'POST',
+                  data: data,
+                  url: '/cart/update.js',
+                  dataType: 'json',
+                  success: function() { 
+                    redirectToCustomCheckout()
+                  }
+              }); 
+          } else {
+              redirectToCustomCheckout()
+          }
+      } catch (e) {
+          redirectToCustomCheckout()
+      } //endtrycatch
+    
+    }//end saveCartNoteThenRedirect
+    
+    additional_buttons_selectors = '.extra-checkout-buttons, .additional-checkout-buttons, #additional-checkout-buttons'
+    
+    function setCustomCheckoutListener() {
+        rjQuery(additional_buttons_selectors).hide()
+        rjQuery(".google-wallet-button-holder").hide()        
+        
+        var checkout_button_selectors = "[name='checkout'], [href='/checkout'], form[action='/checkout'] input[type='submit']"
+        
+        rjQuery('body').on('click',checkout_button_selectors, function(event) {
+           event.preventDefault();
+           saveCartNoteThenRedirect()
+        });
+    }
+      
+    function redirectToCustomCheckout() {
+        var token=get_cookie('cart')
+        var myshopify_domain='{{ shop.permanent_domain }}'
+        var subscription_id='2053'
+        var checkout_url= "https://shopifysubscriptions.com/r/checkout?myshopify_domain="+myshopify_domain+"&cart_token="+token+"&subscription_id="+subscription_id;
+        window.location.href= checkout_url;
+    }
+    
+    function checkIfCartHasCustomItems() {
+        cart_info = {{cart | json }}
+        var has_autorenew = false
+        for (i=0;i<cart_info.items.length;i++) {
+            if(cart_info.items[i].properties != null ) {
+                if(cart_info.items[i].properties.shipping_interval_frequency != null) {
+                    window.has_autorenew=true
+                    setCustomCheckoutListener()
+                }
+            }
+        }
+    } 
+     
+     checkIfCartHasCustomItems()
+ 
+     rjQuery(document).ready(function() { 
+        if(window.has_autorenew == true ) {
+            rjQuery(additional_buttons_selectors).hide()
+        }
+     });
+     
+    /* replaces non-existent url of hidden product with real non-hidden product url */
+    /* load cart_items with all line items */
+      var cart_items = [];  
+      {% for item in cart.items %}
+          var single_item = {};
+          single_item.item_name = '{{ item.product.title | replace:"'","\'"}}';
+          single_item.item_quantity = "{{ item.quantity }}";
+          single_item.item_price = "{{ item.line_price | money }}";
+          single_item.product_meta_fields = {
+            {% for metafield in item.product.metafields.subscriptions %}
+            "{{metafield.first}}":"{{metafield.last}}",
+            {% endfor %}
+          };
+          single_item.variant_meta_fields = {
+            {% for variant in item.product.variants %}
+            "variant{{forloop.index}}":{
+            "id": {{variant.id}},
+            {% for metafield in variant.metafields.subscriptions %}
+            "{{metafield.first}}":"{{metafield.last}}",
+            {% endfor %}  				
+          },
+            {% endfor %}
+          };
+          single_item.properties = {
+            {% for property in item.properties %}
+            "{{ property.first }}":"{{ property.last }}",
+            {% endfor %}
+          };
+          cart_items.push(single_item);
+      {% endfor %}
+    
+    
+    /** loop through cart_items and find items that correspond to an original product **/
+    
+      var new_item_mapping = [];
+      {% for item in cart.items %}
+          var new_item_cart = {};
+          {% if item.product.metafields.subscriptions.original_handle %}
+            new_item_cart.item_handle = "{{item.product.url}}";
+                new_item_cart.item_handle_original = "{{item.product.metafields.subscriptions.original_handle }}";
+                new_item_mapping.push(new_item_cart);
+          {% endif %}        
+      {% endfor %}
+    
+      /** replace the urls **/
+      for(item in new_item_mapping){
+          var item_handle = new_item_mapping[item].item_handle;
+          var item_handle_original = new_item_mapping[item].item_handle_original;
+          var items_to_check = rjQuery('a[href*="'+item_handle+'"]')
+          items_to_check.each(function(){
+             rjQuery(this).attr('href',"products/"+item_handle_original);      
+          })
+      }
+    
+}//end big if statement
+</script>
+
