@@ -16,7 +16,11 @@
   <div class="four columns">
     <div id="customer_detail" class="group">
       <h4 class="name">{{ customer.name }}</h4>
-      <a href="/tools/recurring/customer/{{customer.id}}/subscriptions/">Manage Subscriptions</a>
+      {% if customer.metafields.subscriptions.customer_string %}
+<!--BeginRechargeCode-->
+<a href="/tools/recurring/customer/{{customer.metafields.subscriptions.customer_string}}/subscriptions/">Manage Subscriptions</a>
+<!--EndRechargeCode-->
+{% endif %}
       <p class="email note">{{ customer.email }}</p>
       <div class="address note">
         {% if customer.default_address != nil %}
