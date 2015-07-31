@@ -163,7 +163,7 @@
 				</span>
 			</label>
 			
-			<a class="subscription-tooltip subscription-font-color" href="#" id="see-details" style="margin-left:0px;text-transform:none;">See details 
+			<a class="subscription-tooltip subscription-font-color" href="#" id="see-details" style="margin-left:0px;text-transform:none;"  onclick="return false;">See details 
 				<span class="subscription-font-color"> 
 				{% if widget_how_it_works %}
       				{{ widget_how_it_works }}
@@ -486,7 +486,7 @@ if (subscription_on==true) {
         price_recurring = parseFloat(price_recurring).toFixed(2);
 
 		rjQuery('#one-time-price_{{product.id}}').text(" "+currency_symbol+ price_one_time + currency_suffix);
-		rjQuery('#recurring-time-price_{{product.id}}').text(" "+currency_symbol + price_recurring + currency_suffix);
+				rjQuery('#recurring-time-price_{{product.id}}').html(" <span class=\"bucket\">(</span>$"+currency_symbol + price_recurring + currency_suffix+"<span class=\"bucket\">)</span>");
 	}
 	
 	/** PRICE RELATED DOCUMENT READY **/

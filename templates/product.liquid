@@ -27,6 +27,7 @@
       {{ product.title }}
     </div>
   </div>
+
 </div>
 
 {% if settings.product_sidebar %}
@@ -156,7 +157,8 @@
     </div>
   {% endif %}
   </div>
-
+    <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+	{% include 'cross-sell' %}
   {% if settings.display_related_products %}
     {% capture limit %}{{ settings.products_per_row | plus: 1 }}{% endcapture %}
 

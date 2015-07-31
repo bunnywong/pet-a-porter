@@ -1,0 +1,21 @@
+<script>
+	document.addEventListener("lsReady", function () {
+		var collectionID = "{{ collection.id }}"; if (isNaN(collectionID)) collectionID = "all";
+		var personalized = "{{ collection.metafields.LimeSpot['Personalized'] }}" == "true";
+		LimeSpot.Storefront.TrackerActivitySource = personalized ? "PersonalizedCollection" : "StandardNavigation";
+
+		LimeSpot.Storefront.ActivateTimeSpentLogging(LimeSpot.Storefront.TrackerActivitySource, "CollectionTimeSpend", collectionID);
+
+		LimeSpot.Storefront.LogActivity(LimeSpot.Storefront.TrackerActivitySource, "CollectionView", collectionID);
+
+		if (personalized) {
+			var anchors = document.getElementsByTagName("a");
+			for (var i = 0; i < anchors.length; i++) {
+				if (anchors[i].href.indexOf("/products/") != -1)
+					anchors[i].href = anchors[i].href + (anchors[i].href.indexOf("?") == -1 ? "?" : "&") + "lssrc=personalized";
+			}
+		}
+	});
+</script>
+{% include 'limespot-tracker-add-to-cart' %}
+<!--428021842f85c729df9acd4e6fc70df4-->

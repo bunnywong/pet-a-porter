@@ -158,7 +158,11 @@
 	</div>
 
   {% if settings.slideshow_width_narrow %}
-    </div>
+    
+{% include 'limespot-login-prompt-banner' %}
+{% include 'limespot-most-popular' %}
+{% include 'limespot-recently-viewed' %}
+</div>
   {% else %}
     <div class="container content" style="padding-top:0">
   {% endif %}

@@ -1,0 +1,150 @@
+{% if template == 'product' %}
+  {% assign cscurrentpage = 'product' %}
+{% else %}
+  {% assign cscurrentpage = 'cart' %}
+{% endif %}
+
+{% if shop.metafields.shopCrosssell.settings != null %}
+
+<script>!window.jQuery && document.write('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"><\/script>')</script>
+{{ 'api.jquery.js' | shopify_asset_url | script_tag }}
+
+  <script type="text/javascript" charset="utf-8">
+  //<![CDATA[
+  
+  var crosssellsettings = eval({{ shop.metafields.shopCrosssell.settings | json }});
+    
+  {% if cscurrentpage == 'product' %}
+    //product specific settings
+    var crossselltitleproductpage = crosssellsettings[0]['titleproductpage'];
+    var crossselltitleproductpagedefault = crosssellsettings[0]['titleproductpagedefault']; 
+    var crosssellmaxitems = crosssellsettings[0]['productpagemaxitems'];
+    var crosssellshowdefault = crosssellsettings[0]['showdefault']; 
+  {% else %}
+    //cart/basket settings
+    var crossselltitlecheckoutpage = crosssellsettings[0]['titlecheckoutpage'];
+    var crosssellmaxitems = crosssellsettings[0]['checkoutpagemaxitems'];
+    var crosssellshowcheckout = crosssellsettings[0]['showcheckout'];
+  {% endif %}
+
+  //]]>
+  </script> 
+
+{% endif %}
+
+
+<div id="cross-sell" class="sixteen columns crosssell"></div>
+
+<script type="text/javascript" charset="utf-8">
+  //<![CDATA[
+  var tmpdata = '';
+  var tmptitle = ''; 
+  {% if cscurrentpage == 'product' %}
+  
+    //First of all, see if this product has any handpicked crosssell items
+    if(crosssellshowdefault != '4')
+    {  
+      {% if product.metafields.productDetails.crosssell != null %}
+        //See if the selected product has any cross-sell items
+        tmpdata = eval({{ product.metafields.productDetails.crosssell | json }}); 
+        if(crossselltitleproductpage.length) // if a title has been selected
+        {
+          tmptitle = crossselltitleproductpage;
+        }
+      {% endif %}
+    }
+    if(crosssellshowdefault == '1' || (crosssellshowdefault == '2' && tmpdata == '')) 
+    {
+      //Show default cross-sell items on all product pages? Override all
+      //See if any default cross-sell items have been selected for the product page
+      {% if shop.metafields.shopCrosssell.default != null %}
+        tmpdata = eval({{ shop.metafields.shopCrosssell.default | json }}); 
+        if(crossselltitleproductpagedefault.length) // if a default products title has been selected
+        {
+          tmptitle = crossselltitleproductpagedefault;
+        }
+      {% endif %} 
+    } 
+  {% else %}
+    //We are not on the product page. //Has the merchant turned on checkout cross-sell items?
+    if(crosssellshowcheckout == '2') 
+    {
+      //See if any checkout cross-sell items have been selected
+      {% if shop.metafields.shopCrosssell.checkout != null %}
+        tmpdata = eval({{ shop.metafields.shopCrosssell.checkout | json }}); 
+        if(crossselltitlecheckoutpage) // if a default checkout title has been selected
+        {
+          tmptitle = crossselltitlecheckoutpage;
+        }
+      {% endif %} 
+    }
+  {% endif %}
+ 
+  if(tmpdata)
+  {
+  
+  	var tmptitle =  '<h4 class="title center">' + tmptitle + '</h4>';
+  	jQuery('#cross-sell').append(tmptitle); // write the title and container to the page
+    var crosssell = [];
+    var order = '';
+    //Set the maximum number of items that should be shown?
+    var numproducts = (crosssellmaxitems < tmpdata.length) ? crosssellmaxitems : tmpdata.length;
+    //objects tend to randomize the output, so put the handles into an array first
+    for (var i=0; i<numproducts; i++)
+    {
+      order = (Number(tmpdata[i]['order']) - 1);
+      crosssell[order] = tmpdata[i]['handle']; 
+    } 
+ 
+    if (crosssell.length && crosssell[0] !== '')
+    { 
+      var list = jQuery('#cross-sell.crosssell');
+      var alphaomega = '';
+      var evenodd = '';      
+      for (var j=0; j<crosssell.length; j++)
+      {
+        evenodd = (j % 2 == 0)? ' even' : ' odd';
+        if(j==0)
+        {
+        	alphaomega = ' alpha ';
+        }
+        else if(j == (crosssell.length - 1))
+        {
+			alphaomega = ' omega ';          
+        }
+        else
+        {
+         	alphaomega = ' ';
+        }
+        jQuery.ajax({
+        cache: true,
+        async: false,
+        dataType: "json",
+        success: function(product) {
+        var pricevaries = product.price_varies ? '<small><em>from </em></small>' : '';
+          
+         if(product.images[0])
+         {
+		   list.append('<div class="four columns' + alphaomega + 'thumbnail' + evenodd + '"><a href="' + product.url + '" title="' + product.title + '"><div class="relative product_image"><img src="' + product.images[0].replace(/(.JPG|.jpg|.PNG|.png|.JPEG|.jpeg|.GIF|.gif)/, '_large$1') + '" alt="' + product.images[0].alt + '"/></div><div class="info"><span class="title">' + product.title + '</span><span class="price">'+ Shopify.formatMoney(product.price, '{{shop.money_format}}') + '</span></div></a></div>');           
+          }
+          else
+          {         
+		   list.append('<div class="four columns' + alphaomega + 'thumbnail' + evenodd + '"><a href="' + product.url + '" title="' + product.title + '"><div class="relative product_image"><img src="https://cdn.shopify.com/s/images/admin/no-image-large.gif" /></div><div class="info"><span class="title">' + product.title + '</span><span class="price">' + Shopify.formatMoney(product.price, '{{shop.money_format}}') + '</span></div></a></div>');                     
+		   }
+        },
+        url: '/products/' + crosssell[j] + '.js?'
+      }); 
+    }
+  } 
+ }
+
+//Cross-sell settings
+var settingsoutput = '';
+jQuery.each(crosssellsettings[0], function(key, value){
+  	settingsoutput += '<input type="hidden" name="' + key + '" id="cs_' + key + '" value="' + value + '" />';    	
+});	       
+jQuery('#cross-sell').append(settingsoutput);
+
+//]]>
+</script>
+</script>

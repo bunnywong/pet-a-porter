@@ -1,0 +1,39 @@
+<script>
+	document.addEventListener("lsReady", function () {
+		LimeSpot.Storefront.TrackerActivitySource = "StandardNavigation";
+		var lsSource = LimeSpot.Storefront.GetUrlParam("lssrc");
+		if (lsSource != null && lsSource != undefined) lsSource = lsSource.toLowerCase();
+		
+		switch (lsSource) {
+			case "related":
+				LimeSpot.Storefront.TrackerActivitySource = "RelatedProducts";
+				break;
+
+			case "popular":
+				LimeSpot.Storefront.TrackerActivitySource = "PopularProducts";
+				break;
+
+			case "recentviews":
+				LimeSpot.Storefront.TrackerActivitySource = "RecentlyViewedProducts";
+				break;
+				
+			case "trending":
+				LimeSpot.Storefront.TrackerActivitySource = "TrendingProducts";
+				break;
+				
+			case "cart":
+				LimeSpot.Storefront.TrackerActivitySource = "CartRecommendations";
+				break;
+
+			case "personalized":
+				LimeSpot.Storefront.TrackerActivitySource = "PersonalizedCollection";
+				break;
+		}
+
+		LimeSpot.Storefront.ActivateTimeSpentLogging(LimeSpot.Storefront.TrackerActivitySource, "ObjectTimeSpend", "{{ product.id }}");
+
+		LimeSpot.Storefront.LogActivity(LimeSpot.Storefront.TrackerActivitySource, "ObjectView", "{{ product.id }}");
+	});
+</script>
+{% include 'limespot-tracker-add-to-cart' %}
+<!--9c1527bf20db61a9677fbfa59666d330-->

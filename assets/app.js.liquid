@@ -424,3 +424,44 @@ Licensed under the MIT license
 ;(function(a){a.fn.instagramLite=function(b){if(!this.length){return this}var e={username:null,clientID:null,limit:10,list:true,urls:false,error:function(){},success:function(){}};var d=this;d.settings={};d.settings=a.extend({},e,b);var c=a(this);if(d.settings.clientID&&d.settings.username){c.each(function(){a.ajax({type:"GET",url:"https://api.instagram.com/v1/users/search?q="+d.settings.username+"&client_id="+d.settings.clientID+"&callback=?",dataType:"jsonp",success:function(h){for(var g=0;g<h.data.length;g++){var f=h.data[g];if(f.username===d.settings.username){a.ajax({type:"GET",url:"https://api.instagram.com/v1/users/"+f.id+"/media/recent/?client_id="+d.settings.clientID+"&count="+d.settings.limit+"&callback=?",dataType:"jsonp",success:function(m){if(m.meta.code===200){for(var l=0;l<m.data.length;l++){var k=m.data[l];if(k.type==="image"){var j='<img src="'+k.images.low_resolution.url+'" data-filter="'+k.filter+'" />';if(d.settings.urls){var j='<a href="'+k.link+'" target="_blank">'+j+"</a>"}if(d.settings.list){var j="<div class=\"one-fifth column\">"+j+"</div>"}c.append(j)}}d.settings.success.call(this)}else{d.settings.error.call(this,m.meta.code,m.meta.error_message)}},error:function(){d.settings.error.call(this)}});break}}},error:function(){d.settings.error.call(this)}})})}else{console.log("Both a client ID and username are required to use this plugin.")}}})(jQuery);
 {% endraw %}
 
+
+
+
+
+
+
+/* Customer Function
+-------------------------------------------------- */
+
+$(document).ready(function(){
+
+  // Mobile logo
+  $('.icon-menu').after('<div class="mobi-logo-warpper" onClick="location.href = \'//pet-a-porter.com.hk\';"></div>');
+  $('.mm-fixed-top img').clone().appendTo('.mobi-logo-warpper').addClass('mobi-logo');
+
+
+  // Smooth scroll to internal target
+  $('body.index a[href*=#]:not([href=#]).action_button').click(function() {
+    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+      var target = $(this.hash);
+      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+      if (target.length) {
+        var mobiPos = target.offset().top;
+        var desktopAdjustment = 30;
+        var winWidth = $(window).width();
+        var brakePoint = 767;
+        var pos = mobiPos;
+
+        if(winWidth > brakePoint) {
+          pos = mobiPos - desktopAdjustment;
+        }
+
+        $('html,body').animate({
+          scrollTop: pos
+        }, 1000);
+        return false;
+      }
+    }
+  });
+
+});

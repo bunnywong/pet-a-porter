@@ -115,11 +115,19 @@
           </p>
         {% endif %}
       </div>
+      
     </div>
+   
   </form>
-  
+
+ {% include 'cross-sell' %}
+
+
   {% include 'cart-shipping-calculator' %}
   <br class="clear" />
   <br class="clear" />
 {% endif %}
  {%  include 'subscription-cart-footer' %}
+{% include 'limespot-tracker-cart' %}
+{% include 'limespot-most-popular' %}
+{% include 'limespot-recently-viewed' %}
